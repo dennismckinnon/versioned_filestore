@@ -7,7 +7,7 @@ contract FileStoreTest is Asserter, Errors {
     function testCreateNullFile(){
         FileStore fs = new FileStore();
         var errorCode = fs.createFile(0);
-        assertUintsEqual(uint(errorCode), NOT_ALLOWED, "allowed to add null file");
+        assertUintsEqual(uint(errorCode), NULL_PARAM_NOT_ALLOWED, "allowed to add null file");
     }
 
     function testCreateFileLinks(){

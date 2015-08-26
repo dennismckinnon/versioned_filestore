@@ -16,6 +16,6 @@
     "testDir": "test",
     "buildDir": "buildtest",
     "docsDir": "docs",
-    "compilerFlags": "--optimize 0 --binary file --json-abi file --ast-json file --natspec-dev file"
+    "compilerFlags": "--optimize 0 --binary file --json-abi file --ast-json file"
   }
 }

@@ -4,9 +4,26 @@ import "File.sol";
 
 contract FileTest is Asserter, Errors {
 
+    address constant TEST_USER = 0x12345;
+
+    // *********************** access ***********************
+
     function testCreateFileAdmin(){
         File f = new File(address(this));
-        assertAddressesEqual(f.admin(), address(this), "admin not set");
+        assertTrue(f.isAdmin(), "admin not set");
+    }
+
+    function testAddEditor(){
+        File f = new File(address(this));
+        f.addEditor(TEST_USER);
+        assertTrue(f.isEditor(TEST_USER), "admin not set");
+    }
+
+    function testRemoveEditor(){
+        File f = new File(address(this));
+        f.addEditor(TEST_USER);
+        f.removeEditor(TEST_USER);
+        assertFalse(f.isEditor(TEST_USER), "user still editor");
     }
 
     // *********************** commits ***********************
@@ -21,13 +38,13 @@ contract FileTest is Asserter, Errors {
     function testCommitNotAdmin(){
         File f = new File(0xdeadbeef);
         var errorCode = f.commit(0xfeedface);
-        assertUintsEqual(uint(errorCode), WRITE_ACCESS_DENIED, "commit allowed for non admin");
+        assertUintsEqual(uint(errorCode), ACCESS_DENIED, "commit allowed for non admin");
     }
 
     function testCommitEmptyHash(){
         File f = new File(address(this));
         var errorCode = f.commit(0);
-        assertUintsEqual(uint(errorCode), NOT_ALLOWED, "error when committing");
+        assertUintsEqual(uint(errorCode), INVALID_PARAM_VALUE, "error when committing");
     }
 
     function testCommit(){
@@ -77,7 +94,7 @@ contract FileTest is Asserter, Errors {
         var errorCode = f.commit(0xdeadbeef);
         assertUintsEqual(uint(errorCode), 0, "error when committing");
         errorCode = f.addTag(0, 0xdeadbeef);
-        assertUintsEqual(uint(errorCode), NOT_ALLOWED, "empty tag allowed");
+        assertUintsEqual(uint(errorCode), INVALID_PARAM_VALUE, "empty tag allowed");
     }
 
     function testAddNullRef(){
@@ -85,25 +102,25 @@ contract FileTest is Asserter, Errors {
         var errorCode = f.commit(0xdeadbeef);
         assertUintsEqual(uint(errorCode), 0, "error when committing");
         errorCode = f.addTag("george", 0);
-        assertUintsEqual(uint(errorCode), NOT_ALLOWED, "empty ref allowed");
+        assertUintsEqual(uint(errorCode), INVALID_PARAM_VALUE, "empty ref allowed");
     }
 
     function testTagNonRef(){
         File f = new File(address(this));
         var errorCode = f.addTag("george", 0xdeadbeef);
-        assertUintsEqual(uint(errorCode), NOT_ALLOWED, "tagging null-ref allowed");
+        assertUintsEqual(uint(errorCode), INVALID_PARAM_VALUE, "tagging null-ref allowed");
     }
 
     function testAddTagNotAdmin(){
         File f = new File(0xfeedface);
         var errorCode = f.addTag("george", 0xdeadbeef);
-        assertUintsEqual(uint(errorCode), WRITE_ACCESS_DENIED, "non addmin add tag allowed");
+        assertUintsEqual(uint(errorCode), ACCESS_DENIED, "non addmin add tag allowed");
     }
 
     function testRemoveTagNotAdmin(){
         File f = new File(0xfeedface);
         var errorCode = f.removeTag("george");
-        assertUintsEqual(uint(errorCode), WRITE_ACCESS_DENIED, "non admin remove tag allowed");
+        assertUintsEqual(uint(errorCode), ACCESS_DENIED, "non admin remove tag allowed");
     }
 
     function testAddTagLinks(){
@@ -162,7 +179,7 @@ contract FileTest is Asserter, Errors {
     function testCommitAndTagNotAdmin(){
         File f = new File(0xfeedface);
         var errorCode = f.commitAndTag("george", 0xdeadbeef);
-        assertUintsEqual(uint(errorCode), WRITE_ACCESS_DENIED, "commitAndTag allowed non-admin");
+        assertUintsEqual(uint(errorCode), ACCESS_DENIED, "commitAndTag allowed non-admin");
     }
 
 }

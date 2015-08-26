@@ -11,9 +11,9 @@
  */
 
 var gulp = require('gulp');
-var contracts = require('./lib/contracts')();
+var contractsModule = require('./lib/contracts');
 var fs = require('fs-extra');
-var app = require('./dapp.json');
+var dapp = require('./dapp.json');
 
 require('require-dir')('./gulp-tasks');
 
@@ -22,7 +22,6 @@ gulp.task('build-contracts', ['contracts-build']);
 
 // Build the contract tests.
 gulp.task('build-test-contracts', ['contracts-post-build-tests']);
-
 
 // Deploy contracts task.
 gulp.task('deploy-contracts', function(cb){deploy(cb)});
@@ -33,35 +32,34 @@ gulp.task('default', ['build-contracts']);
 function deploy(callback){
     var abi, compiled;
     try {
-        abi = fs.readJsonSync('contracts/build/InterestCalculator.abi');
-        compiled = fs.readFileSync('contracts/build/InterestCalculator.binary').toString();
+        abi = fs.readJsonSync('contracts/build/FileStore.abi');
+        compiled = fs.readFileSync('contracts/build/FileStore.binary').toString();
     } catch (error){
         callback(error);
         return;
     }
-    var calcFactory = contracts(abi);
-
-    /*
-     if(dapp.bank_address){
-     var bank = bankFactory.at(dapp.bank_address);
-     bank.remove(function(error){
-     // Put creation code here instead.
-     });
-     }
-     */
-
-    calcFactory.new({data: compiled}, function(error, contract){
+    contractsModule(function(error, contracts){
         if(error){
-            callback(error);
-            return;
+            throw error;
         }
-        app.calc_address = contract.address;
-        var err;
-        try {
-            fs.writeJsonSync('app.json', app);
-        } catch(error){
-            err = error;
-        }
-        callback(err);
-    })
+
+        var fsFactory = contracts(abi);
+
+        fsFactory.new({data: compiled}, function(error, contract){
+            if(error){
+                callback(error);
+                return;
+            }
+            dapp.fs_address = contract.address;
+            var err;
+            try {
+                fs.writeJsonSync('dapp.json', dapp);
+            } catch(error){
+                err = error;
+            }
+            callback(err);
+        })
+
+    });
+
 }

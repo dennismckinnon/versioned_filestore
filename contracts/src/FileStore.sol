@@ -18,15 +18,17 @@ contract FileStore is Errors {
 
     FileList files;
 
+    function FileStore(){}
+
     function createFile(bytes32 file) returns (uint16 error) {
         if(file == 0){
-            return NOT_ALLOWED;
+            return NULL_PARAM_NOT_ALLOWED;
         }
         // Add
         FileElement e = files.fileMap[file];
 
         if(e.fileAddress != 0){
-            return RESOURCE_CONFLICT;
+            return RESOURCE_ALREADY_EXISTS;
         }
 
         e.fileAddress = address(new File(msg.sender));
@@ -48,6 +50,10 @@ contract FileStore is Errors {
         FileElement e = files.fileMap[file];
         if(e.fileAddress == 0){
             return RESOURCE_NOT_FOUND;
+        }
+
+        if(!File(e.fileAddress).isAdmin(msg.sender)){
+            return ACCESS_DENIED;
         }
 
         bytes32 next;
